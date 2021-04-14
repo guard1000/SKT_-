@@ -235,6 +235,8 @@ if __name__ == "__main__":
     구성원정보 = pd.read_csv(구성원_path)
     구성원정보_중복제거 = 구성원정보.drop_duplicates(['사번'], keep='first')
 
-    searcher()
+    while True:
+        searcher()
+        print()
 
 
