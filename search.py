@@ -1,7 +1,8 @@
 import pandas as pd
 import os, sys
 import pickle
-
+import warnings
+warnings.filterwarnings("ignore")
 
 def resource_path(relative_path):
     try:
@@ -13,10 +14,11 @@ def resource_path(relative_path):
 
 
 def searcher():
-    print('[검색] 사번을 아래에 입력하세요.')
-    print('  사번_Output(실본부단위).xlsx, 사번_Output(팀단위).xlsx 파일이 생성됩니다.')
-    print('  직속조직의 경우, Output(팀단위) 파일만 생성됩니다.')
-    print('    입력 예시) 1112737')
+    print('[1] 사번을 아래에 입력하세요. (팀 리더 또는 담당 실무자)')
+    print('    입력 예시) 1112345')
+    print('[2] 총 2개의 파일이 생성됩니다. (사번_Output(실본부단위).xlsx, 사번_Output(팀단위).xlsx)')
+    print('    단, 직속조직의 경우 Output(팀단위) 파일만 생성됩니다.')
+    print('    xlsx 파일은 현재 실행중인 .exe 파일이 위치한 동일폴더에 생성됩니다.')
     inp = input('입력: ')
     inp_사번 = int(inp)
 
@@ -24,7 +26,7 @@ def searcher():
     if len(targets) == 0:  #
         print('잘못 입력하셨습니다. 사번을 확인하세요.')
     else:
-        target_센터, target_실본부, target_팀 = list(targets['센터Lv'])[0], list(targets['실/본부 Lv'])[0], list(targets['팀 Lv'])[0]
+        target_센터, target_실본부, target_팀 = list(targets['최상위 Lv'])[0], list(targets['실/본부 Lv'])[0], list(targets['팀 Lv'])[0]
 
     학습시간목표 = 100
     ##########################################
@@ -76,10 +78,16 @@ def searcher():
         cell_format = workbook.add_format()
         cell_format.set_align('center')
 
+        bold_center = workbook.add_format({'bold': True, 'align': 'center'})
+        bold_center_bg = workbook.add_format({'bold': True, 'align': 'center', 'border': 2, 'bg_color': 'BDBDBD'})
+
         worksheet = writer.sheets['검색대상']
         worksheet.freeze_panes(1, 0)
-        worksheet.set_column('A:A', 15, cell_format)
+        worksheet.set_column('A:A', 15, bold_center)
         worksheet.set_column('B:B', 30, cell_format)
+
+        worksheet.write('A1', '사업부/센터', bold_center_bg)
+        worksheet.write('A2', '실/본부', bold_center_bg)
 
         worksheet = writer.sheets['평균학습시간']
         worksheet.freeze_panes(1, 0)
@@ -88,6 +96,11 @@ def searcher():
         worksheet.set_column('C:C', 15, cell_format)
         worksheet.set_column('D:D', 15, cell_format)
 
+        worksheet.write('A1', '구분', bold_center_bg)
+        worksheet.write('B1', '목표학습시간', bold_center_bg)
+        worksheet.write('C1', '학습시간', bold_center_bg)
+        worksheet.write('D1', '목표 달성률', bold_center_bg)
+
         worksheet = writer.sheets['학습현황']
         worksheet.freeze_panes(1, 0)
         worksheet.set_column('A:A', 5, cell_format)
@@ -95,6 +108,12 @@ def searcher():
         worksheet.set_column('C:C', 30, cell_format)
         worksheet.set_column('D:D', 15, cell_format)
         worksheet.set_column('E:E', 30, cell_format)
+
+        worksheet.write('A1', '순번', bold_center_bg)
+        worksheet.write('B1', '실/본부', bold_center_bg)
+        worksheet.write('C1', '팀', bold_center_bg)
+        worksheet.write('D1', '평균학습시간', bold_center_bg)
+        worksheet.write('E1', target_실본부 + ' 평균대비', bold_center_bg)
 
         # 엑셀 파일 저장
         writer.save()
@@ -151,6 +170,7 @@ def searcher():
     output2_학습이력 = pd.DataFrame(columns=['순번', '사번', '이름', '과정명', '학습시간', '학습구분'])
 
     output_이력 = output_종합[output_종합['팀 Lv'] == target_팀]
+    output_이력['사번'] = [int(_) for _ in list(output_이력['사번'])]
     output_이력 = output_이력.sort_values('사번')  # 사번순 정렬
 
     for _ in range(len(output_이력)):
@@ -171,11 +191,18 @@ def searcher():
     workbook = writer.book
     cell_format = workbook.add_format()
     cell_format.set_align('center')
+    bold_center = workbook.add_format({'bold': True, 'align': 'center'})
+    bold_center_bg = workbook.add_format({'bold': True, 'align': 'center', 'border': 2, 'bg_color': 'BDBDBD'})
 
     worksheet = writer.sheets['검색대상']
     worksheet.freeze_panes(1, 0)
-    worksheet.set_column('A:A', 15, cell_format)
+    worksheet.set_column('A:A', 15, bold_center)
     worksheet.set_column('B:B', 30, cell_format)
+
+    worksheet.write('A1', '사업부/센터', bold_center_bg)
+    worksheet.write('A2', '실/본부', bold_center_bg)
+    worksheet.write('A3', '팀', bold_center_bg)
+    worksheet.write('A4', '팀인원', bold_center_bg)
 
     worksheet = writer.sheets['평균학습시간']
     worksheet.freeze_panes(1, 0)
@@ -183,6 +210,11 @@ def searcher():
     worksheet.set_column('B:B', 15, cell_format)
     worksheet.set_column('C:C', 15, cell_format)
     worksheet.set_column('D:D', 15, cell_format)
+
+    worksheet.write('A1', '구분', bold_center_bg)
+    worksheet.write('B1', '목표학습시간', bold_center_bg)
+    worksheet.write('C1', '학습시간', bold_center_bg)
+    worksheet.write('D1', '목표 달성률', bold_center_bg)
 
     worksheet = writer.sheets['학습현황']
     worksheet.freeze_panes(1, 0)
@@ -193,6 +225,13 @@ def searcher():
     worksheet.set_column('E:E', 15, cell_format)
     worksheet.set_column('F:F', 15, cell_format)
 
+    worksheet.write('A1', '순번', bold_center_bg)
+    worksheet.write('B1', '사번', bold_center_bg)
+    worksheet.write('C1', '성명', bold_center_bg)
+    worksheet.write('D1', '총 학습시간', bold_center_bg)
+    worksheet.write('E1', 'mySUNI 학습시간', bold_center_bg)
+    worksheet.write('F1', 'TLP 학습시간', bold_center_bg)
+
     worksheet = writer.sheets['학습이력']
     worksheet.freeze_panes(1, 0)
     worksheet.set_column('A:A', 5, cell_format)
@@ -202,6 +241,13 @@ def searcher():
     worksheet.set_column('E:E', 15, cell_format)
     worksheet.set_column('F:F', 15, cell_format)
 
+    worksheet.write('A1', '순번', bold_center_bg)
+    worksheet.write('B1', '사번', bold_center_bg)
+    worksheet.write('C1', '이름', bold_center_bg)
+    worksheet.write('D1', '과정명', bold_center_bg)
+    worksheet.write('E1', '학습시간', bold_center_bg)
+    worksheet.write('F1', '학습구분', bold_center_bg)
+
     # 엑셀 파일 저장
     writer.save()
     print(output2_filename, ' 파일 생성 완료.')
@@ -210,10 +256,8 @@ def searcher():
 
 if __name__ == "__main__":
     print('================================================')
-    print('[SKT 학습시간 현황 파악]을 위한 임시 검색기입니다.')
-    print('       주관부서: Competency그룹 역량육성팀')
-    print('       데이터 분석/개발: 박천욱(Infra AI/DT추진Cell)')
-    print('       최종 수정 일자: 2021.04.14')
+    print('[SKT 학습시간 현황 파악]을 위한 검색기입니다.')
+    print('                최종 수정 일자 : 2021.04.26')
     print('================================================\n\n')
 
     # laod data
@@ -230,6 +274,7 @@ if __name__ == "__main__":
     종합_path = resource_path('output_종합.csv')
     output_종합 = pd.read_csv(종합_path)
     output_종합 = output_종합[output_종합['팀 Lv'] != '구성원정보_미등록자']  # 구성원정보 미등록자는 제외
+    output_종합['사번'] = [str(_) for _ in list(output_종합['사번'])]
 
     구성원_path = resource_path('구성원정보.csv')
     구성원정보 = pd.read_csv(구성원_path)
